@@ -27,7 +27,7 @@ log_file="$install_dir/$install_log"
 # Install Node.js if needed and dependencies
 echo "Installing Node.js environment and dependencies..." >> "$log_file"
 apt-get install -y nodejs npm >> "$log_file" 2>&1
-npm install pi-spi async onoff date-and-time socket.io-client >> "$log_file" 2>&1
+npm install pi-spi async onoff date-and-time socket.io-client >> "$log_file" 2>&1 || { echo "Failed to install Node.js dependencies. Check $log_file for details."; exit 1; }
 
 # ---------------------------------------------------
 # Enable spi-dev module to allow hardware interfacing
