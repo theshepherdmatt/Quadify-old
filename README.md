@@ -23,6 +23,10 @@ You can get there by using your web browser to open the **port 4150** :
 * **Your device must have network access to download dependencies.** This set of files is not designed for offline installation.
 
 ## Usage : 
+* Install Git
+```bash
+sudo apt-get install git -y
+```
 
 * Update package repo list
 ```bash
