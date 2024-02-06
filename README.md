@@ -1,5 +1,5 @@
 # Quadify
-Toolset and sources file used for customizing RPI audio distributions with Quadify hardware support 
+Toolset and sources file used for customizing RPI audio distributions with Quadify hardware support, originally made by Audiophonics and updated by Quadify
 
 This repository holds sources and methods for installing the specific hardware found in a Quadify and some utilities in a fresh distribution for audio playback on Raspberry Pi. 
 
@@ -9,7 +9,7 @@ This repository holds sources and methods for installing the specific hardware f
 * Installation of OLED Display
 * Installation of aptswi (web interface with some system options, see below) 
 
-## APTSWI : Audiophonics ToolSet in a Web Interface
+## APTSWI : ToolSet in a Web Interface
 Some options can be configured by the user (such as OLED brightness, sleep-delay, or boot logo) in a tiny web interface powered by nodeJS. 
 You can get there by using your web browser to open the **port 4150** : 
 * Navigate to [http://moode:4150](http://moode:4150.). 
