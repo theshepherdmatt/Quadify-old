@@ -1,131 +1,82 @@
-#!bin/sh 
-case "$1" in 
-'volumio')
-	install_dep_volumio(){
-		if apt-get -qq install build-essential 2>&1 /dev/null; then
-			echo "Build-essential package is installed."
-		else
-			printf "This version of Volumio lacks some dependencies for software compilation.\nTrying to workaround using this technique : https://community.volumio.org/t/cannot-install-build-essential-package/46856/16 ...\n" &&
-			bash Workaround_BuildEssentials.sh  > /dev/null 2>> install_log.txt && 
-			echo "... OK" && return 1 ||  
-			echo "... Failed again. The OLED display will not be installed." &&
-			exit 1
-		fi
-	}
- 
-	start_time="$(date +"%T")"
-	echo "* Installing : Evo Sabre OLED#2"
-	echo "" > install_log.txt
-	install_dep_volumio
-	sudo -u volumio npm install pi-spi  				 > /dev/null 2>> install_log.txt
-	sudo -u volumio npm install async  					 > /dev/null 2>> install_log.txt
-	sudo -u volumio npm install onoff  					 > /dev/null 2>> install_log.txt
-	sudo -u volumio npm install date-and-time 			 > /dev/null 2>> install_log.txt
-	sudo -u volumio npm install socket.io-client@2.1.1 	 > /dev/null 2>> install_log.txt
-	
-	# ---------------------------------------------------
-	# Enable spi-dev module to allow hardware interfacing
-	if ! grep -q spi-dev "/etc/modules"; then
-		echo "spi-dev" >> /etc/modules
-	fi
-	if ! grep -q dtparam=spi=on "/boot/userconfig.txt"; then
-		echo "dtparam=spi=on"  >> /boot/userconfig.txt
-	fi
+#!/bin/bash
 
-	if [ ! -f "/etc/modprobe.d/spidev.conf" ] || ! cat "/etc/modprobe.d/spidev.conf" | grep -q 'bufsiz=8192'  ; then echo "options spidev bufsiz=8192"  >> /etc/modprobe.d/spidev.conf ; fi
+# Define execution start time
+start_time="$(date +"%T")"
+echo "* Installing: Quadify OLED"
+install_log="install_log.txt"
+echo "" > "$install_log"
 
-	# ---------------------------------------------------
-	# Register & enable service so display will run at boot
-	printf "[Unit]
-	Description=OLED Display Service
-	After=volumio.service
-	[Service]
-	WorkingDirectory=${PWD}
-	ExecStart=/bin/node ${PWD}/index.js volumio
-	ExecStop=/bin/node ${PWD}/off.js
-	StandardOutput=null
-	Type=simple
-	User=volumio
-	[Install]
-	WantedBy=multi-user.target"> /etc/systemd/system/oled.service &&
-	systemctl enable oled	> /dev/null 2>> install_log.txt	&&
+# Capture the invoking user's name and home directory
+if [ "$SUDO_USER" ]; then
+    real_user="$SUDO_USER"
+    real_home=$(getent passwd "$SUDO_USER" | cut -d: -f6)
+else
+    real_user="$USER"
+    real_home="$HOME"
+fi
 
+# Update installation and logging directory
+install_dir="$real_home/Quadify/moode/oled"
+mkdir -p "$install_dir"
+cd "$install_dir" || exit 1
 
-	echo "OLED service enabled ( /etc/systemd/system/oled.service )"
+# Update log file location
+log_file="$install_dir/$install_log"
 
-	if lsmod | grep "spidev" &> /dev/null ; then
-	  systemctl start oled
-	  echo "Display should turn on."
-	  echo "*End of installation : Evo Sabre OLED#2 (spidev module is already loaded, so no reboot is required)"
-	  
-	else
-	  echo "*End of installation : Evo Sabre OLED#2 (spidev module is NOT loaded : a reboot is required)"
-	fi
+# ---------------------------------------------------
+# Install Node.js if needed and dependencies
+echo "Installing Node.js environment and dependencies..." >> "$log_file"
+apt-get install -y nodejs npm >> "$log_file" 2>&1
+npm install pi-spi async onoff date-and-time socket.io-client >> "$log_file" 2>&1
 
-	echo started at $start_time finished at "$(date +"%T")" >> install_log.txt
-	exit 0
-	;;
+# ---------------------------------------------------
+# Enable spi-dev module to allow hardware interfacing
+echo "Enabling SPI interface..." >> "$log_file"
+if ! grep -q spi-dev "/etc/modules"; then
+    echo "spi-dev" >> /etc/modules
+fi
+if ! grep -q dtparam=spi=on "/boot/config.txt"; then
+    echo "dtparam=spi=on" >> /boot/config.txt
+fi
+if [ ! -f "/etc/modprobe.d/spidev.conf" ] || ! grep -q 'bufsiz=8192' "/etc/modprobe.d/spidev.conf"; then
+    echo "options spidev bufsiz=8192" >> /etc/modprobe.d/spidev.conf
+fi
 
-'moode')
-	start_time="$(date +"%T")"
-	echo "* Installing : Evo Sabre OLED#2"
-	echo "" > install_log.txt
+# ---------------------------------------------------
+# Register & enable service so display will run at boot
+service_file="/etc/systemd/system/oled.service"
+echo "Creating and enabling Quadify OLED service..." >> "$log_file"
+sudo bash -c "cat > $service_file" <<EOF
+[Unit]
+Description=Quadify OLED Display Service
+After=mpd.service
+Requires=mpd.service
 
-	# ---------------------------------------------------
-	# Installing nodejs if needed and deps
-	echo "installing nodejs env and dependencies"
-	apt-get install -y nodejs npm					 > /dev/null 2>> install_log.txt
-	sudo -u pi npm install pi-spi  					 > /dev/null 2>> install_log.txt
-	sudo -u pi npm install async  					 > /dev/null 2>> install_log.txt
-	sudo -u pi npm install onoff  					 > /dev/null 2>> install_log.txt
-	sudo -u pi npm install date-and-time 			 > /dev/null 2>> install_log.txt
-	sudo -u pi npm install socket.io-client 		 > /dev/null 2>> install_log.txt
+[Service]
+WorkingDirectory=$install_dir
+ExecStartPre=/bin/sleep 10
+ExecStart=/bin/node $install_dir/index.js moode
+ExecStop=/bin/node $install_dir/off.js
+StandardOutput=null
+Type=simple
+User=$real_user
 
-	# ---------------------------------------------------
-	# Enable spi-dev module to allow hardware interfacing
-	if ! grep -q spi-dev "/etc/modules"; then
-		echo "spi-dev" >> /etc/modules
-	fi
-	if ! grep -q dtparam=spi=on "/boot/config.txt"; then
-		echo "dtparam=spi=on"  >> /boot/config.txt
-	fi
-	if  ! grep -q bufsiz=8192 "/etc/modprobe.d/spidev.conf";  then
-		echo "options spidev bufsiz=8192"  >> /etc/modprobe.d/spidev.conf 
-	fi
+[Install]
+WantedBy=multi-user.target
+EOF
 
+systemctl daemon-reload >> "$log_file" 2>&1
+systemctl enable oled >> "$log_file" 2>&1
+echo "Quadify OLED service enabled (/etc/systemd/system/oled.service)" >> "$log_file"
 
-	# ---------------------------------------------------
-	# Register & enable service so display will run at boot
+# Attempt to start the service if SPI is available
+if lsmod | grep "spidev" &> /dev/null; then
+    systemctl start oled
+    echo "Display should turn on." >> "$log_file"
+    echo "*End of installation: Quadify OLED (spidev module is already loaded, no reboot required)" >> "$log_file"
+else
+    echo "*End of installation: Quadify OLED (spidev module is NOT loaded: a reboot is required)" >> "$log_file"
+fi
 
-	printf "[Unit]
-	Description=OLED Display Service
-	After=mpd.service
-	Requires=mpd.service
-	[Service]
-	WorkingDirectory=${PWD}
-	ExecStart=/bin/node ${PWD}/index.js moode
-	ExecStop=/bin/node ${PWD}/off.js
-	StandardOutput=null
-	Type=simple
-	User=pi
-	[Install]
-	WantedBy=multi-user.target"> /etc/systemd/system/oled.service &&
-	systemctl enable oled	> /dev/null 2>> install_log.txt	&&
-	echo "OLED service enabled ( /etc/systemd/system/oled.service )"
-
-	if lsmod | grep "spidev" &> /dev/null ; then
-	  systemctl start oled
-	  echo "Display should turn on."
-	  echo "*End of installation : Evo Sabre OLED#2 (spidev module is already loaded, so no reboot is required)"
-	  
-	else
-	  echo "*End of installation : Evo Sabre OLED#2 (spidev module is NOT loaded : a reboot is required)"
-	fi
-
-	echo started at $start_time finished at "$(date +"%T")" >> install_log.txt
-	exit 0
-	;;
-	
-esac 
-
-
+# Final log entry
+echo "Started at $start_time and finished at $(date +"%T")" >> "$log_file"
