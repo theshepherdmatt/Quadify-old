@@ -40,12 +40,7 @@ sudo git clone https://github.com/theshepherdmatt/Quadify.git
 
 * Enter the directory.
 ```bash
-cd Quadify
-```
-
-* Each supported distribution has its own directory, enter the one corresponding to the distribution installed on your Quadify. 
-```bash
-cd moode
+cd Quadify/moode
 ```
 
 * Run the installation script **as root** to install all available features
