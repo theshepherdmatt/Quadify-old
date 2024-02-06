@@ -1,4 +1,4 @@
-!/bin/bash
+#!/bin/bash
 
 start_time=$(date +"%T")
 log_file="install_log.txt"
@@ -12,7 +12,7 @@ user_name=${SUDO_USER:-${USER}}
 start_pwd=$(pwd)
 
 # Define the path to the web interface directory based on the user's home directory
-web_interface_dir="${user_home}/Evo_Sabre/moode/quadify_web_interface"
+web_interface_dir="${user_home}/Quadify/moode/apts_web_interface"
 
 echo "Installing Node.js..." | tee -a "$log_file"
 if apt-get install -y nodejs >> "$log_file" 2>&1; then
@@ -23,7 +23,7 @@ else
 fi
 
 echo "Installing modules..." | tee -a "$log_file"
-for file in "${web_interface_dir}/quadify_modules/*"; do 
+for file in "${web_interface_dir}/ap_modules/*"; do 
     if [ -f "$file/install.sh" ]; then
         (cd "$file" && bash install.sh >> "$start_pwd/$log_file" 2>&1)
         echo "Installed module from $file" | tee -a "$log_file"
@@ -41,7 +41,7 @@ Requires=mpd.service
 
 [Service]
 WorkingDirectory=$web_interface_dir
-ExecStart=/usr/bin/env node $apts_web_interface_dir/web_interface.js
+ExecStart=/usr/bin/env node $web_interface_dir/apts_web_interface.js
 Type=simple
 Restart=always
 User=$user_name
