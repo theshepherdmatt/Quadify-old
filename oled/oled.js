@@ -45,8 +45,8 @@ var Oled = function(opts) {
   this.WIDTH = opts.width || 256;
   this.horizontal_columns = this.WIDTH >> 2;
   
-  this.dcPinNumber = opts.dcPin || 27;
-  this.rstPinNumber = opts.rstPin || 24;
+  this.dcPinNumber = opts.dcPin || 24;
+  this.rstPinNumber = opts.rstPin || 25;
   this.divisor = opts.divisor || 0xF1;
   this.device = opts.device || "/dev/spidev0.0";
   this.cursor_x = 0;
