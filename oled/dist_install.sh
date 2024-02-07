@@ -49,16 +49,18 @@ echo "Creating and enabling Quadify OLED service..." >> "$log_file"
 sudo bash -c "cat > $service_file" <<EOF
 [Unit]
 Description=Quadify OLED Display Service
-After=mpd.service
+After=mpd.service network.target
+Wants=network.target
 Requires=mpd.service
 
 [Service]
 WorkingDirectory=$install_dir
-ExecStartPre=/bin/sleep 10
 ExecStart=/bin/node $install_dir/start-oled.sh
 ExecStop=/bin/node $install_dir/off.js
+Restart=on-failure
+RestartSec=5
 StandardOutput=null
-Type=simple
+Type=idle
 User=$real_user
 
 [Install]
