@@ -65,6 +65,9 @@ User=$real_user
 WantedBy=multi-user.target
 EOF
 
+# Ensure start-oled.sh is executable
+chmod +x "$install_dir/start-oled.sh" >> "$log_file" 2>&1 || { echo "Failed to set executable permission for start-oled.sh"; exit 1; }
+
 systemctl daemon-reload >> "$log_file" 2>&1
 systemctl enable oled >> "$log_file" 2>&1
 echo "Quadify OLED service enabled (/etc/systemd/system/oled.service)" >> "$log_file"
