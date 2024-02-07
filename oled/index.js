@@ -377,40 +377,26 @@ if (this.page === "deep_sleep") return;
 
 ap_oled.prototype.clock_mode = function(){
 if (this.page === "clock") return;
-	clearInterval(this.update_interval);
-	this.page = "clock";
-	
-	this.refresh_action = ()=>{
-		this.driver.buffer.fill(0x00);
-		let fdate = date.format(new Date(),'YYYY/MM/DD'),
-		ftime = date.format(new Date(),'HH:mm:ss');
-		
-		this.driver.setCursor(90, 0);
-		this.driver.writeString( fonts.monospace ,1,fdate,3);
-		
-		this.driver.setCursor(50,15);
-		this.driver.writeString( fonts.monospace ,3,ftime,6);
-		this.driver.drawLine(1, 41, 255, 41, 5, false);
-		
-		
-		this.driver.setCursor(20,47);
-		this.driver.writeString(fonts.monospace ,1, (this.ip?this.ip:"No network...") ,4);
-		
-		
-		if(this.data && this.data.volume !== null ){
-			let volstring = this.data.volume.toString();
-			if(this.data.mute === true || volstring === "0") volstring = "X";
-			this.driver.setCursor(185,47);
-			this.driver.writeString(fonts.icons , 1 , "0" ,4); 
-			this.driver.setCursor(195,47);
-			this.driver.writeString(fonts.monospace ,1, volstring ,6);
+        clearInterval(this.update_interval);
+        this.page = "clock";
 
-		}
-		this.driver.update(true);
-	}
-	this.refresh_action();
-	this.update_interval = setInterval( ()=>{this.refresh_action()}, 1000);
-	
+        this.refresh_action = ()=>{
+                this.driver.buffer.fill(0x00);
+                let fdate = date.format(new Date(),'YYYY/MM/DD'),
+                ftime = date.format(new Date(),'HH:mm');
+
+                this.driver.setCursor(100, 45);
+                this.driver.writeString( fonts.monospace ,1,fdate,3);
+
+                this.driver.setCursor(85,5);
+                this.driver.writeString( fonts.monospace ,3,ftime,6);
+                this.driver.drawLine(1, 35, 255, 35, 5, false);
+
+                this.driver.update(true);
+        }
+        this.refresh_action();
+        this.update_interval = setInterval( ()=>{this.refresh_action()}, 1000);
+
 }
 
 ap_oled.prototype.playback_mode = function(){
