@@ -55,7 +55,7 @@ Requires=mpd.service
 [Service]
 WorkingDirectory=$install_dir
 ExecStartPre=/bin/sleep 10
-ExecStart=/bin/node $install_dir/index.js moode
+ExecStart=/bin/node $install_dir/start-oled.sh
 ExecStop=/bin/node $install_dir/off.js
 StandardOutput=null
 Type=simple
