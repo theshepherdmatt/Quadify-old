@@ -1,73 +1,23 @@
 #!/bin/bash
 
-# Define execution start time
-start_time="$(date +"%T")"
-log_file="install_log.txt"
-echo "Installation initiated at $start_time" > "$log_file"
+start_time=$(date +"%T")
+starting_dir=${PWD}
 
-echo "* Installing: Quadify ToolSet (web interface)" | tee -a "$log_file"
+echo "***   Installation of Quadify for moOde" 
+echo "***   _____________________________________" 
 
-# Capture the invoking user's name and home directory
-if [ "$SUDO_USER" ]; then
-    real_user="$SUDO_USER"
-    real_home=$(getent passwd "$SUDO_USER" | cut -d: -f6)
-else
-    real_user="$USER"
-    real_home="$HOME"
-fi
-
-# Update installation and logging directory
-install_dir="$real_home/Quadify/moode/apts_web_interface"
-mkdir -p "$install_dir"
-
-# Update log file location
-log_file="$install_dir/$log_file"
-
-echo "Installing Node.js..." | tee -a "$log_file"
-if apt-get install -y nodejs >> "$log_file" 2>&1; then
-    echo "Node.js installed successfully." | tee -a "$log_file"
-else
-    echo "Failed to install Node.js. Exiting..." | tee -a "$log_file"
-    exit 1
-fi
-
-echo "Installing modules..." | tee -a "$log_file"
-for file in "${install_dir}/ap_modules/*"; do 
-    if [ -f "$file/install.sh" ]; then
-        (cd "$file" && bash install.sh >> "$log_file" 2>&1)
-        echo "Installed module from $file" | tee -a "$log_file"
+# Install modules
+for dir in "$starting_dir"/*; do
+    if [ -d "$dir" ] && [ -f "$dir/install.sh" ]; then
+        echo "Installing from $dir"
+        (cd "$dir" && bash "./install.sh")
     fi
 done
 
-echo "Enabling Quadify ToolSet service..." | tee -a "$log_file"
-service_file="/etc/systemd/system/apts_web_interface.service"
+# Ensure return to the starting directory, though technically unnecessary due to subshell execution
+cd "$starting_dir"
 
-cat > "$service_file" <<EOF
-[Unit]
-Description=Quadify toolset in a web interface
-After=mpd.service
-Requires=mpd.service
-
-[Service]
-WorkingDirectory=$install_dir
-ExecStart=/usr/bin/env node $install_dir/apts_web_interface.js
-Type=simple
-Restart=always
-User=$real_user
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-if systemctl daemon-reload >> "$log_file" 2>&1 && \
-   systemctl enable apts_web_interface >> "$log_file" 2>&1 && \
-   systemctl restart apts_web_interface >> "$log_file" 2>&1; then
-    echo "Quadify ToolSet service enabled & started" | tee -a "$log_file"
-else
-    echo "Failed to enable Quadify ToolSet service. Check log for details." | tee -a "$log_file"
-fi
-
-end_time=$(date +"%T")
-echo "* End of installation: Quadify ToolSet (web interface) - no reboot required" | tee -a "$log_file"
-echo "Installation started at $start_time and finished at $end_time" | tee -a "$log_file"
-exit 0
+# ---------------------------------------------------
+# Say something nice, show start time and end time
+echo "* End of installation : Quadify for moOde"
+echo "Started at $start_time and ended at $(date +"%T")"
