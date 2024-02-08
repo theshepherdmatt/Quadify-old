@@ -96,5 +96,30 @@ function check_buttons_and_update_leds() {
     setTimeout(check_buttons_and_update_leds, 100); // Adjust delay as needed
 }
 
+const PLAY_LED = 1; // LED index for play button
+const PAUSE_LED = 2; // LED index for pause button
+
+function updatePlayPauseLEDs() {
+    exec("mpc status", (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Error executing MPC command: ${error.message}`);
+            return;
+        }
+        
+        // Parse MPC status to check if playing or paused
+        const statusLines = stdout.split('\n');
+        const status = statusLines.find(line => line.startsWith("[playing]"));
+        const isPlaying = status !== undefined;
+        
+        // Update LEDs based on play/pause state
+        const led_state = isPlaying ? (1 << (PLAY_LED - 1)) : (1 << (PAUSE_LED - 1));
+        control_leds(led_state);
+    });
+}
+
+// Call the function to update play/pause LEDs every few seconds
+setInterval(updatePlayPauseLEDs, 5000); // Adjust interval as needed
+
+
 // Start the main loop
 check_buttons_and_update_leds();
