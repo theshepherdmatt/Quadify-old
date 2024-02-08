@@ -1,3 +1,36 @@
+const { exec } = require('child_process');
+
+// Function to run a script
+function runScript(scriptName) {
+    console.log(`Executing ${scriptName}.js...`); // Add print statement here
+    exec(`node ${scriptName}.js`, (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Error executing ${scriptName}.js: ${error.message}`);
+            return;
+        }
+        console.log(`${scriptName}.js output: ${stdout}`);
+        if (stderr) console.error(`${scriptName}.js stderr: ${stderr}`);
+    });
+    console.log(`Finished executing ${scriptName}.js`); // Add print statement here
+}
+
+// Function to run buttonsleds.js script
+function runButtonsLedsScript() {
+	console.log("Running buttonsleds.js script...");
+    runScript('buttonsleds');
+}
+
+// Function to run rotary.js script
+function runRotaryScript() {
+	console.log("Running rotary.js script...");
+    runScript('rotary');
+}
+
+// Run both buttonsleds.js and rotary.js on startup
+console.log("Starting scripts...");
+runButtonsLedsScript();
+runRotaryScript();
+
 const os = require("os");
 const date = require('date-and-time');
 const oled = require('./oled.js');
@@ -625,4 +658,3 @@ fs.readFile("config.json",(err,data)=>{
 	process.on('SIGUSR2', exitcatcher.bind(null, {exit:true}));
 
 });
-
