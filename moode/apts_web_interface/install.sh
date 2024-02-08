@@ -7,15 +7,15 @@ echo "Installation started at $start_time" > "$log_file"
 echo "* Installing: Quadify ToolSet (web interface)" | tee -a "$log_file"
 
 # Dynamically determine the user's home directory and username
-if [ ! -z "$SUDO_USER" ]; then
-    user_home=$(eval echo ~$SUDO_USER)
-    user_name=$SUDO_USER
+if [ "$SUDO_USER" ]; then
+    real_user="$SUDO_USER"
+    real_home=$(getent passwd "$SUDO_USER" | cut -d: -f6)
 else
-    user_home=$HOME
-    user_name=$USER
+    real_user="$USER"
+    real_home="$HOME"
 fi
 
-web_interface_dir="${user_home}/Quadify/moode/apts_web_interface"
+web_interface_dir="$real_home/Quadify/moode/apts_web_interface"
 
 # Proceed with the installation steps, ensuring paths and permissions are correctly set
 # The steps would include installing Node.js, any necessary modules, and setting up the web interface
@@ -35,7 +35,7 @@ WorkingDirectory=$web_interface_dir
 ExecStart=/usr/bin/env node $web_interface_dir/apts_web_interface.js
 Type=simple
 Restart=always
-User=$user_name
+User=$real_user
 
 [Install]
 WantedBy=multi-user.target
