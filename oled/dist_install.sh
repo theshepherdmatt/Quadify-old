@@ -55,15 +55,17 @@ Requires=mpd.service
 
 [Service]
 WorkingDirectory=$install_dir
-ExecStart=/bin/bash -c '$install_dir/start-oled.sh'
+ExecStart=/bin/bash -c 'sleep 15; $install_dir/start-oled.sh'
 ExecStop=/bin/node $install_dir/off.js
+Restart=on-failure
 StandardOutput=null
-Type=idle
+Type=simple
 User=$real_user
 
 [Install]
 WantedBy=multi-user.target
 EOF
+
 
 # Ensure start-oled.sh is executable
 chmod +x "$install_dir/start-oled.sh" >> "$log_file" 2>&1 || { echo "Failed to set executable permission for start-oled.sh"; exit 1; }
