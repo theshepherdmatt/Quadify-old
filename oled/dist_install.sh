@@ -55,7 +55,7 @@ Requires=mpd.service
 
 [Service]
 WorkingDirectory=$install_dir
-ExecStart=/bin/bash -c 'sleep 15; $install_dir/start-oled.sh'
+ExecStart=/bin/node $install_dir/index.js moode
 ExecStop=/bin/node $install_dir/off.js
 Restart=on-failure
 StandardOutput=null
