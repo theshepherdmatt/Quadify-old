@@ -55,7 +55,7 @@ Requires=mpd.service
 
 [Service]
 WorkingDirectory=$install_dir
-ExecStart=/bin/bash -c 'sleep 15; $install_dir/start-oled.sh'
+ExecStart=/bin/bash -c 'sleep 15; $install_dir/start_oled.sh'
 ExecStop=/bin/node $install_dir/off.js
 Restart=on-failure
 StandardOutput=null
@@ -67,8 +67,18 @@ WantedBy=multi-user.target
 EOF
 
 
-# Ensure start-oled.sh is executable
-chmod +x "$install_dir/start-oled.sh" >> "$log_file" 2>&1 || { echo "Failed to set executable permission for start-oled.sh"; exit 1; }
+# Path to the new launcher script
+start_oled="$install_dir/start_oled.sh"
+
+# Creating the launcher script with dynamic path
+echo "#!/bin/bash" > "$start_oled"
+echo "/bin/node $install_dir/index.js moode" >> "$start_oled"
+
+# Making the launcher script executable
+chmod +x "$start_oled" || { echo "Failed to set executable permission for $start_oled"; exit 1; }
+
+echo "Start script created at $start_oled" >> "$log_file"
+
 
 systemctl daemon-reload >> "$log_file" 2>&1
 systemctl enable oled >> "$log_file" 2>&1
