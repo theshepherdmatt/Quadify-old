@@ -35,7 +35,7 @@ sudo apt-get install git -y
 
 * Download source files (this repository).
 ```bash
-sudo git clone https://github.com/theshepherdmatt/Quadify.git
+git clone https://github.com/theshepherdmatt/Quadify.git
 ```
 
 * Enter the directory.
