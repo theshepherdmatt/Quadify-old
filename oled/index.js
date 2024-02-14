@@ -31,6 +31,7 @@ console.log("Starting scripts...");
 runButtonsLedsScript();
 runRotaryScript();
 
+
 const os = require("os");
 const date = require('date-and-time');
 const oled = require('./oled.js');
@@ -86,7 +87,7 @@ function server(req,res){
 	cmd = value[0];
 	value = value[1];
 	extn_exit_sleep_mode = true;
-	
+
 	switch(cmd){
 		case 'restart':
 			res.end("1");
@@ -151,30 +152,6 @@ function ap_oled(opts){
 
 }
 
-ap_oled.prototype.volumio_seek_format = function (seek,duration){
-	try{
-		if(!duration) ratiobar = 0;
-		else ratiobar =  ( seek / (duration * 1000) * (this.width - 6) );
-	}
-	catch(e){
-		ratiobar = 0;
-	}	
-	try{
-		duration = new Date(duration * 1000).toISOString().substr(14, 5);
-	}
-	catch(e){
-		duration = "00:00";
-	}
-	try{
-		seek = new Date(seek).toISOString().substr(14, 5);
-	}
-	catch(e){
-		seek = "";
-	}
-	seek_string = seek + " / "+ duration;
-	return({seek_string:seek_string,ratiobar:ratiobar});
-}
-
 ap_oled.prototype.moode_seek_format = function (seek,duration,song_percent){
 	try{
 		if(!duration) ratiobar = 0;
@@ -182,7 +159,7 @@ ap_oled.prototype.moode_seek_format = function (seek,duration,song_percent){
 	}
 	catch(e){
 		ratiobar = 0;
-	}	
+	}
 	try{
 		duration = new Date(duration * 1000).toISOString().substr(14, 5);
 	}
@@ -202,90 +179,8 @@ ap_oled.prototype.moode_seek_format = function (seek,duration,song_percent){
 ap_oled.prototype.listen_to = function(api,frequency){
 	frequency= frequency || 1000;
 	let api_caller = null;
-	
-	if(api === "volumio"){
-		var io = require('socket.io-client' );
-		var socket = io.connect('http://localhost:3000');
-		api_caller = setInterval( 
-			()=>{
-				if(api_state_waiting) return;
-				api_state_waiting = true;
-				socket.emit("getState");
-			}, frequency );
-		let first = true;
-		
-        socket.emit("getState");
-		socket.on("pushState", (data)=> { // se déclenche si changement de morceau / volume / repeat / random / play / pause , ou si l'utilisateur avance manuellement dans la timebar.
-			
-			let exit_sleep = false;
-			if(extn_exit_sleep_mode){
-				extn_exit_sleep_mode = false;
-				exit_sleep = true;
-			}
-			if(first){
-				first = false;
-				socket.emit("getState");
-				return;
-			}
-			api_state_waiting = false;
-			
-            if( // changement de piste
-                this.data.title  !== data.title  || 
-                this.data.artist !== data.artist || 
-                this.data.album  !== data.album  
-            ){
-                this.text_to_display = data.title + (data.artist?" - " + data.artist:"") + (data.album?" - " + data.album:"") ;
-				this.driver.CacheGlyphsData( this.text_to_display);
-				this.text_width = this.driver.getStringWidthUnifont(this.text_to_display + " - ");
-				
-                this.scroller_x = 0;
-                this.refresh_track = REFRESH_TRACK;
-				this.footertext = "";
-				exit_sleep = true;
-            }
-			// changement de volume
-			if(  this.data.volume !== data.volume ){exit_sleep = true;}
-			
-			// avance dans la piste
-			let seek_data = this.volumio_seek_format( data.seek, data.duration );
-			
 
-			if(data.status !== "play" && this.raw_seek_value !== data.seek){
-				exit_sleep = true;
-			}
-			this.raw_seek_value = data.seek;
-			
-			if(data.status == "play"){exit_sleep = true;}
-			
-			this.footertext = "";
-			if( !data.samplerate && !data.bitdepth && !data.bitrate ) socket.emit("getQueue"); // s'il manque des données, un autre emit permet de compléter les infos pour tout ce qui est fréquence / bitrate
-			else{
-				if ( data.samplerate ) this.footertext += data.samplerate.toString().replace(/\s/gi,"") + " ";
-				if ( data.bitdepth   ) this.footertext += data.bitdepth.toString().replace(/\s/gi,"") + " ";
-				if ( data.bitrate    ) this.footertext += data.bitrate.toString().replace(/\s/gi,"") + " ";
-			}
-			
-			this.data = data; // attention à la position de cette commande : une fois cette assignation effectuée, plus aucune comparaison n'est possible avec l'état précédent
-			this.data.seek_string = seek_data.seek_string;
-			this.data.ratiobar = seek_data.ratiobar;
-			
-			this.handle_sleep(exit_sleep);	
-		
-			return api_caller;
-		})
-		
-		socket.on("pushQueue", (resdata)=> {
-			let data = resdata[0];
-			if( !this.footertext && data ) {
-				if ( data.samplerate ) this.footertext += data.samplerate.toString().replace(/\s/gi,"") + " ";
-				if ( data.bitdepth   ) this.footertext += data.bitdepth.toString().replace(/\s/gi,"") + " ";
-				if ( data.bitrate    ) this.footertext += data.bitrate.toString().replace(/\s/gi,"") + " ";
-			}
-		});
-
-	}
-	
-	else if( api === "moode" ){
+	if( api === "moode" ){
 		var moode_listener = require("./moode_listener.js").moode_listener;
 		var moode = new moode_listener();
 		moode.on("moode_data", (data)=>{
@@ -295,15 +190,15 @@ ap_oled.prototype.listen_to = function(api,frequency){
 				extn_exit_sleep_mode = false;
 				exit_sleep = true;
 			}
-			
+
 			api_state_waiting = false;
-			
+
             if( // changement de piste
                 this.data.title  !== data.title  || 
                 this.data.artist !== data.artist || 
                 this.data.album  !== data.album  
             ){
-                this.text_to_display = data.title + (data.artist?" - " + data.artist:"") + (data.album?" - " + data.album:"");
+                this.text_to_display = data.title + (data.artist?" - " + data.artist:"");
 				this.driver.CacheGlyphsData( this.text_to_display);
 				this.text_width = this.driver.getStringWidthUnifont(this.text_to_display + " - ");
 				
@@ -312,24 +207,25 @@ ap_oled.prototype.listen_to = function(api,frequency){
 				this.footertext = "";
 				exit_sleep = true;
             }
-			
+
+
 			// changement de volume
 			if(  this.data.volume !== data.volume ){exit_sleep = true;}
-			
+
 			// avance dans la piste
 			let seek_data = this.moode_seek_format( data.elapsed, data.time, data.song_percent );
-			
+
 			if(data.state !== "play" && this.raw_seek_value !== data.elapsed){
 				exit_sleep = true;
 			}
 			this.raw_seek_value = data.elapsed;
-			
+
 			if(data.state == "play"){exit_sleep = true;}
-			
+
 			this.footertext = "";
 
-			if (data.audio) 	this.footertext += data.audio + " ";
-			if (data.bitrate)	this.footertext += data.bitrate + " ";
+			//if (data.audio) 	this.footertext += data.audio + " ";
+			//if (data.bitrate)	this.footertext += data.bitrate + " ";
 
 			this.data = data; // attention à la position de cette commande : une fois cette assignation effectuée, plus aucune comparaison n'est possible avec l'état précédent
 			this.data.seek_string = seek_data.seek_string;
@@ -370,7 +266,7 @@ if (this.page === "snake_screensaver") return;
 			let _x =  Math.floor(Math.random() * (this.width ));
 			let _y =  Math.floor(Math.random() * (this.height/3))*3;
 			random_pickups.push([_x,_y]);
-		}	
+		}
 	}
 	screen_saver_animation_reset();
 	this.refresh_action = ()=>{
@@ -433,7 +329,7 @@ if (this.page === "clock") return;
 }
 
 ap_oled.prototype.playback_mode = function(){
-    
+
 	if (this.page === "playback") return;
 	clearInterval(this.update_interval);
 
@@ -442,45 +338,50 @@ ap_oled.prototype.playback_mode = function(){
     this.text_to_display = this.text_to_display || "";
 	this.refresh_track = REFRESH_TRACK;
 	this.refresh_action =()=>{
-		
+
         if(this.plotting){ return }; // skip plotting of this frame if the pi has not finished plotting the previous frame
         this.plotting = true;
 
 		this.driver.buffer.fill(0x00);
-		
+
 		if(this.data){
             // volume
             if(this.data.volume !== null ){
                 let volstring = this.data.volume.toString();
                 if(this.data.mute === true || volstring === "0") volstring = "X";
-                
-                this.driver.setCursor(0,0);
-                this.driver.writeString(fonts.icons , 1 , "0" ,5); 
-                this.driver.setCursor(10,1);
-                this.driver.writeString(fonts.monospace ,1, volstring ,5);
-            }    
-			
-			// repeat
-			if(this.data.repeatSingle){
-				this.driver.setCursor(232,0);
-				this.driver.writeString(fonts.icons , 1 , "5" ,5); 
-			} else if( this.data.repeat ){
-				this.driver.setCursor(232,0);
-                this.driver.writeString(fonts.icons , 1 , "4" ,5); 
+
+		this.driver.setCursor(0, this.height - 20); // Move volume display down
+		this.driver.writeString(fonts.icons, 1, "0", 5); // Volume icon
+		this.driver.setCursor(10, this.height - 19); // Adjust accordingly
+		this.driver.writeString(fonts.monospace, 1, volstring, 5); // Volume level
+
+
             }
-			
+
+		// Repeat Single or Repeat All
+	    if(this.data.repeatSingle){
+    		this.driver.setCursor(232, this.height - 20); // Move repeat single symbol down
+    		this.driver.writeString(fonts.icons, 1, "5", 5); // Repeat single symbol
+	    } else if(this.data.repeat){
+    		this.driver.setCursor(232, this.height - 20); // Move repeat all symbol down
+    		this.driver.writeString(fonts.icons, 1, "4", 5); // Repeat all symbol
+	    }
+
+
 			// track type (flac, mp3, webradio...etc.)
 			if(this.data.trackType){
-				this.driver.setCursor(35,1);
-				this.driver.writeString(fonts.monospace , 1 , this.data.trackType ,4); 
+
+				this.driver.setCursor(70, this.height - 22); // Move file type down
+				this.driver.writeString(fonts.monospace, 1, this.data.trackType, 4);
+
 			}
-		
+
 			// string with any data we have regarding sampling rate and bitrate
 			if(this.footertext){
 				this.driver.setCursor(0,57);
 				this.driver.writeString(fonts.monospace , 1 , this.footertext ,5); 
 			}
-			
+
 			// play pause stop logo
 			if(this.data.status){
                 let status_symbol = "";
@@ -495,44 +396,61 @@ ap_oled.prototype.playback_mode = function(){
 						status_symbol = "3"
 						break;
 				}    
-                this.driver.setCursor(246,0);
-                this.driver.writeString(fonts.icons ,1, status_symbol ,6);
+
+		this.driver.setCursor(246, this.height - 20); // Move play/pause/stop logo down
+		this.driver.writeString(fonts.icons, 1, status_symbol, 6);
+
+
 			}
 
-			// track title album artists
-			if(this.text_to_display.length){ 
-				//  if the whole text is short enough to fit the whole screen
-				if( this.text_width <= this.width ){
-					this.driver.setCursor( 0, 17 );
-					this.driver.writeStringUnifont(this.text_to_display,7 );  
-				}
-				else{ // text overflows the display (very likely considering it's 256px) : make the text scroll alongside its horizontal direction
-					let text_to_display = this.text_to_display;
-					text_to_display = text_to_display + " - " + text_to_display + " - ";
-					if(this.scroller_x + (this.text_width) < 0 ){
-						this.scroller_x = 0;
+
+			// Inside your playback_mode function or similar
+			if (this.text_to_display.length) {
+				let splitIndex = this.text_to_display.indexOf(" - ");
+				let title = this.text_to_display.substring(0, splitIndex);
+				let artist = this.text_to_display.substring(splitIndex + 3);
+
+				// Function to handle scrolling or centering text
+				const handleTextDisplay = (text, initialY) => {
+					let textWidth = this.driver.getStringWidthUnifont(text);
+					if (textWidth > this.width) {
+						// Scroll text
+						if (!this.scrollX) this.scrollX = 0;
+						this.driver.cursor_x = this.scrollX;
+						this.scrollX = this.scrollX - 1 < -textWidth ? this.width : this.scrollX - 1;
+					} else {
+						// Center text
+						this.driver.cursor_x = (this.width - textWidth) / 2;
 					}
-					this.driver.cursor_x = this.scroller_x;
-					this.driver.cursor_y = 14
-					this.driver.writeStringUnifont(text_to_display,7 );
-				}
+					this.driver.cursor_y = initialY;
+					this.driver.writeStringUnifont(text, 7);
+				};
+
+				// Adjust Y positions as needed
+				handleTextDisplay(title, 0); // For title
+				handleTextDisplay(artist, 16); // For artist, placed below the title
 			}
+
+
 			// seek data
 			if(this.data.seek_string){
 				let border_right = this.width -5;
 				let Y_seekbar = 35;
 				let Ymax_seekbar = 38;
-				this.driver.drawLine(3, Y_seekbar, border_right , Y_seekbar, 3);
-				this.driver.drawLine(border_right, Y_seekbar,border_right , Ymax_seekbar, 3);
-				this.driver.drawLine(3, Ymax_seekbar,border_right, Ymax_seekbar, 3);
-				this.driver.drawLine(3, Ymax_seekbar, 3, Y_seekbar, 3);
+				let bottomY = this.height - 7; // Start 10 pixels from the bottom
+				// Adjusted code
+				this.driver.drawLine(3, bottomY, border_right, bottomY, 3);
+				this.driver.drawLine(border_right, bottomY, border_right, this.height - 4, 3); // Adjusted to be 3 pixels above bottomY
+				this.driver.drawLine(3, this.height - 4, border_right, this.height - 4, 3); // Same here
+				this.driver.drawLine(3, this.height - 4, 3, bottomY, 3); // And here
+				this.driver.fillRect(3, bottomY, this.data.ratiobar, 4, 4); // Filling the progress bar
 				this.driver.cursor_y = 43;
-				this.driver.cursor_x = 83;
-				this.driver.writeString(fonts.monospace , 1 , this.data.seek_string ,5); 
-				this.driver.fillRect(3, Y_seekbar, this.data.ratiobar, 4, 4);
+				this.driver.cursor_x = 93;
+				this.driver.writeString(fonts.monospace , 0 , this.data.seek_string ,5);
+
 			}
 		}
-		
+
 		this.driver.update();
 		this.plotting = false;
         if(this.refresh_track) return this.refresh_track--; // ne pas updater le curseur de scroll avant d'avoir écoulé les frames statiques (juste après un changement de morceau)
@@ -542,7 +460,6 @@ ap_oled.prototype.playback_mode = function(){
 	this.update_interval = setInterval( ()=>{ this.refresh_action() },opts.main_rate);
 	this.refresh_action();
 }
-
 
 ap_oled.prototype.get_ip = function(){
 	try{
@@ -560,24 +477,24 @@ ap_oled.prototype.get_ip = function(){
 
 
 ap_oled.prototype.handle_sleep = function(exit_sleep){
-	
+
 	if( !exit_sleep ){ // Est-ce que l'afficheur devrait passer en mode veille ? 
-		
+
 		if(!this.iddle_timeout){ // vérifie si l'écran n'attend pas déjà de passer en veille (instruction initiée dans un cycle précédent)
-			
-		
+
+
 			let _deepsleep_ = ()=>{this.deep_sleep();}
-		
+
 			let _screensaver_ = ()=>{
 				this.snake_screensaver();
 				this.iddle_timeout = setTimeout(_deepsleep_,TIME_BEFORE_DEEPSLEEP);
 			}
-			
+
 			let _clock_ = ()=>{
 				this.clock_mode();
 				this.iddle_timeout = setTimeout(_screensaver_,TIME_BEFORE_SCREENSAVER);
 			}
-			
+
 			this.iddle_timeout = setTimeout( _clock_ , TIME_BEFORE_CLOCK );
 		}
 	}
@@ -586,7 +503,7 @@ ap_oled.prototype.handle_sleep = function(exit_sleep){
 			this.status_off = null;
 			this.driver.turnOnDisplay();
 		}
-		
+
 		if(this.page !== "spdif" ){
 			this.playback_mode();
 		}
@@ -597,9 +514,9 @@ ap_oled.prototype.handle_sleep = function(exit_sleep){
 		}
 	}
 }
-	
+
 fs.readFile("config.json",(err,data)=>{
-	
+
 	if(err) console.log("Cannot read config file. Using default settings instead.");
 	else{
 		try { 
@@ -611,14 +528,12 @@ fs.readFile("config.json",(err,data)=>{
 			console.log("Cannot read config file. Using default settings instead.");
 		}
 	}
-	
+
 	opts.contrast = CONTRAST;
-	
-	
-	
+
 	const OLED = new ap_oled(opts);
 	var logo_start_display_time = 0;
-	
+
 	OLED.driver.begin(
 		()=>{
 			DRIVER = OLED;
@@ -643,7 +558,7 @@ fs.readFile("config.json",(err,data)=>{
 				OLED.listen_to(distro,1000);
 				OLED.listen_to("ip",1000);
 			} );
-		
+
 		}, time_remaining );
 	}
 
