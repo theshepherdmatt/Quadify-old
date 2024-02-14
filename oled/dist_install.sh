@@ -23,7 +23,7 @@ else
 fi
 
 # Update installation and logging directory
-install_dir="$real_home/Quadify-FM3/moode/oled"
+install_dir="$real_home/Quadify/moode/oled"
 echo -e "${YELLOW}Creating installation directory at $install_dir...${NC}"
 mkdir -p "$install_dir"
 cd "$install_dir" || exit 1
