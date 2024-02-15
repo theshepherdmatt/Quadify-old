@@ -73,7 +73,6 @@ function check_buttons_and_update_leds() {
             if (current_button_state === 0 && prev_button_state[row][col] !== current_button_state) {
                 console.log(`Button ${button_id} pressed`);
                 
-                // Execute corresponding mpc command based on button_id
                 switch(button_id) {
                     case 1: executeMpcCommand("play"); break;
                     case 2: executeMpcCommand("pause"); break;
@@ -81,7 +80,16 @@ function check_buttons_and_update_leds() {
                     case 4: executeMpcCommand("prev"); break;
                     case 5: executeMpcCommand("repeat"); break;
                     case 6: executeMpcCommand("random"); break;
-                    // Add more cases as needed for other buttons
+                    case 7: executeMpcCommand("load Favourite-Radio"); break;
+                    case 8: 
+                        exec("sudo systemctl restart oled.service", (error, stdout, stderr) => {
+                            if (error) {
+                                console.error(`Error restarting oled.service: ${error.message}`);
+                                return;
+                            }
+                            console.log("oled.service restarted successfully.");
+                        });
+                        break;
                 }
 
                 // Update LED state for feedback
@@ -95,6 +103,7 @@ function check_buttons_and_update_leds() {
 
     setTimeout(check_buttons_and_update_leds, 100); // Adjust delay as needed
 }
+
 
 const PLAY_LED = 1; // LED index for play button
 const PAUSE_LED = 2; // LED index for pause button
